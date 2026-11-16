@@ -1,0 +1,20 @@
+{
+  "name": "online-examination-system",
+  "version": "1.0.0",
+  "description": "Online Examination System - C++ and Web Architecture",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "serve": "node dev-server.js",
+    "build:cpp": "cmd /c START_CPP_BACKEND.bat"
+  },
+  "keywords": [
+    "online-exam",
+    "examination",
+    "cpp",
+    "sqlite3"
+  ],
+  "author": "",
+  "license": "ISC"
+}
