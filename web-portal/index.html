@@ -2733,6 +2733,7 @@
         highContrast: false
       }
     };
+    window.state = state;
 
     // Ensure state selected IDs point to valid existing exams after loading persisted state
     (function syncInitialSelectedExams() {
@@ -2768,15 +2769,16 @@
       }
 
       const selected = copy.slice(0, maxDraw).map((item, idx) => {
-        const originalCorrectOption = item.options[item.correct];
-        const shuffledOpts = [...item.options];
+        const itemOptions = Array.isArray(item.options) ? item.options : ['', '', '', ''];
+        const originalCorrectOption = itemOptions[item.correct || 0] || itemOptions[0];
+        const shuffledOpts = [...itemOptions];
         for (let i = shuffledOpts.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
         }
-        const newCorrect = shuffledOpts.indexOf(originalCorrectOption);
+        const newCorrect = Math.max(0, shuffledOpts.indexOf(originalCorrectOption));
         return {
-          text: `${idx + 1}. ${item.text.replace(/^\d+\.\s*/, '')}`,
+          text: `${idx + 1}. ${(item.text || '').replace(/^\d+\.\s*/, '')}`,
           options: shuffledOpts,
           correct: newCorrect,
           marks: item.marks || 5,
@@ -4657,13 +4659,13 @@
 
     function openAddQuestionModal(preselectedExam) {
       const modal = document.getElementById('modalRoot');
+      if (!modal) return;
       const adminExams = getAdminExaminations();
       if (adminExams.length === 0) {
         showToastNotification("⚠️ Please create an examination module first before adding questions.");
         openCreateQuizModal();
         return;
       }
-      if (modal) modal.style.display = 'block';
 
       const targetExam = (preselectedExam && adminExams.some(e => e.id === preselectedExam))
         ? preselectedExam
@@ -4671,9 +4673,12 @@
           ? state.adminSelectedExam
           : adminExams[0].id);
 
+      state.adminSelectedExam = targetExam;
+      modal.style.display = 'block';
+
       modal.innerHTML = `
         <div class="modal-backdrop">
-          <div class="modal-box" style="max-width: 680px; text-align: left;">
+          <div class="modal-box" style="max-width: 680px; text-align: left; max-height: 90vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: var(--fs-2xl);">➕</span>
@@ -4756,20 +4761,22 @@
 
     function handleAddQuestionSubmit(event) {
       if (event) event.preventDefault();
-      const examId = document.getElementById('newQExamSelect').value;
+      const examSelect = document.getElementById('newQExamSelect');
+      if (!examSelect) return;
+      const examId = examSelect.value;
       const adminExams = getAdminExaminations();
       if (!adminExams.some(e => e.id === examId)) {
         showToastNotification("⚠️ Please select a valid course examination module.");
         return;
       }
-      const text = document.getElementById('newQText').value.trim();
-      const opt0 = document.getElementById('newQOpt0').value.trim();
-      const opt1 = document.getElementById('newQOpt1').value.trim();
-      const opt2 = document.getElementById('newQOpt2').value.trim();
-      const opt3 = document.getElementById('newQOpt3').value.trim();
+      const text = (document.getElementById('newQText').value || '').trim();
+      const opt0 = (document.getElementById('newQOpt0').value || '').trim();
+      const opt1 = (document.getElementById('newQOpt1').value || '').trim();
+      const opt2 = (document.getElementById('newQOpt2').value || '').trim();
+      const opt3 = (document.getElementById('newQOpt3').value || '').trim();
       const correct = parseInt(document.getElementById('newQCorrect').value, 10);
       const marks = parseInt(document.getElementById('newQMarks').value, 10) || 5;
-      const explanation = document.getElementById('newQExplanation').value.trim() || 'Official certified curriculum question.';
+      const explanation = (document.getElementById('newQExplanation').value || '').trim() || 'Official certified curriculum question.';
 
       if (!text || !opt0 || !opt1 || !opt2 || !opt3) {
         showToastNotification("⚠️ Please fill in all question prompt and option fields.");
@@ -4783,7 +4790,7 @@
       const newQuestion = {
         text: text,
         options: [opt0, opt1, opt2, opt3],
-        correct: correct,
+        correct: isNaN(correct) ? 0 : correct,
         marks: marks,
         explanation: explanation
       };
@@ -4813,9 +4820,18 @@
 
       showToastNotification(`✓ Successfully added new question to ${examId}! Pool updated to ${masterQuestionPools[examId].length} questions.`);
 
+      if (typeof renderSidebarNavigation === 'function') {
+        renderSidebarNavigation();
+      }
+
       const container = document.getElementById('appViewport');
       renderAdminDashboard(container);
     }
+
+    window.openAddQuestionModal = openAddQuestionModal;
+    window.handleAddQuestionSubmit = handleAddQuestionSubmit;
+    window.deleteQuestionFromPool = deleteQuestionFromPool;
+    window.switchAdminExamPool = switchAdminExamPool;
 
     function deleteQuestionFromPool(examId, idx) {
       const adminExams = getAdminExaminations();
@@ -5195,7 +5211,7 @@
                   <button class="btn-action-outline" style="border-color: #3b82f6; color: #93c5fd; font-size: var(--fs-sm); font-weight: 700; padding: 8px 14px;" onclick="openCreateQuizModal()">
                     📋 Create New Examination
                   </button>
-                  <button class="btn-resume-glow" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 8px 16px; font-size: var(--fs-sm);" onclick="openAddQuestionModal(selectedExam || '')">
+                  <button class="btn-resume-glow" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 8px 16px; font-size: var(--fs-sm);" onclick="openAddQuestionModal('${selectedExam || ''}')">
                     ➕ Add Question
                   </button>
                 </div>
@@ -5237,7 +5253,7 @@
                   <p style="color: var(--text-dim); font-size: var(--fs-base); margin-top: 6px;">
                     ${selectedExam ? `Your examination module <strong>${currentExamObj.title || selectedExam}</strong> is active in your registry. Click below to add questions to this exam pool.` : 'Select or create an examination module to build your question bank.'}
                   </p>
-                  <button class="btn-resume-glow" style="margin-top: 16px; background: linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="openAddQuestionModal(selectedExam || '')">
+                  <button class="btn-resume-glow" style="margin-top: 16px; background: linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="openAddQuestionModal('${selectedExam || ''}')">
                     ➕ Add Question
                   </button>
                 </div>
@@ -5403,6 +5419,9 @@
                             </td>
                             <td class="admin-exam-col-actions" style="text-align: right;">
                               <div class="admin-action-btn-group">
+                                <button class="btn-action-outline admin-exam-btn" style="border-color: #10b981; color: #a7f3d0;" onclick="openAddQuestionModal('${e.id}')" title="Add Question to ${e.id}">
+                                  <span>➕</span> Add Q
+                                </button>
                                 <button class="btn-action-outline admin-exam-btn" style="border-color: #8b5cf6; color: #c4b5fd;" onclick="switchAdminExamPool('${e.id}'); switchAdminTab('questions');" title="Manage Questions for ${e.id}">
                                   <span>❓</span> Questions
                                 </button>
@@ -7961,6 +7980,7 @@
       }
       stopProctoringSystem();
     }
+    window.closeModal = closeModal;
 
     function openNotificationsModal() {
       const modal = document.getElementById('modalRoot');

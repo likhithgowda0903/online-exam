@@ -18,11 +18,13 @@ def get_connection():
 def init_db():
     conn = get_connection()
     c = conn.cursor()
-    # Ensure created_by column exists in quizzes
+    # Ensure created_by and total_questions columns exist in quizzes
     c.execute("PRAGMA table_info(quizzes)")
     cols = [r["name"] for r in c.fetchall()]
     if "created_by" not in cols:
         c.execute("ALTER TABLE quizzes ADD COLUMN created_by TEXT")
+    if "total_questions" not in cols:
+        c.execute("ALTER TABLE quizzes ADD COLUMN total_questions INTEGER DEFAULT 0")
     conn.commit()
     conn.close()
 
@@ -235,10 +237,13 @@ def save_question(data):
         q_id = c.lastrowid
 
     # Update total questions count in quizzes table
-    c.execute("SELECT COUNT(*) as cnt FROM questions WHERE UPPER(quiz_id) = UPPER(?)", (quiz_id,))
-    cnt_row = c.fetchone()
-    if cnt_row:
-        c.execute("UPDATE quizzes SET total_questions = ? WHERE UPPER(id) = UPPER(?)", (cnt_row["cnt"], quiz_id))
+    try:
+        c.execute("SELECT COUNT(*) as cnt FROM questions WHERE UPPER(quiz_id) = UPPER(?)", (quiz_id,))
+        cnt_row = c.fetchone()
+        if cnt_row:
+            c.execute("UPDATE quizzes SET total_questions = ? WHERE UPPER(id) = UPPER(?)", (cnt_row["cnt"], quiz_id))
+    except Exception:
+        pass
 
     conn.commit()
     conn.close()
@@ -249,10 +254,13 @@ def delete_question(question_id, quiz_id=None):
     c = conn.cursor()
     c.execute("DELETE FROM questions WHERE id = ?", (question_id,))
     if quiz_id:
-        c.execute("SELECT COUNT(*) as cnt FROM questions WHERE UPPER(quiz_id) = UPPER(?)", (quiz_id,))
-        cnt_row = c.fetchone()
-        if cnt_row:
-            c.execute("UPDATE quizzes SET total_questions = ? WHERE UPPER(id) = UPPER(?)", (cnt_row["cnt"], quiz_id))
+        try:
+            c.execute("SELECT COUNT(*) as cnt FROM questions WHERE UPPER(quiz_id) = UPPER(?)", (quiz_id,))
+            cnt_row = c.fetchone()
+            if cnt_row:
+                c.execute("UPDATE quizzes SET total_questions = ? WHERE UPPER(id) = UPPER(?)", (cnt_row["cnt"], quiz_id))
+        except Exception:
+            pass
     conn.commit()
     conn.close()
     return {"success": True}
