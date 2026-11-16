@@ -99,35 +99,14 @@ def register_user(data):
 def get_exams(admin_id=None):
     conn = get_connection()
     c = conn.cursor()
-    if admin_id and admin_id.strip():
-        # Match creator by username, id, or email, or unassigned/system exams
-        c.execute("""
-            SELECT q.id, q.title, q.category, q.duration_minutes as durationMinutes,
-                   q.pass_percentage as passingPercentage, q.total_marks as totalMarks,
-                   q.created_by, q.created_at
-            FROM quizzes q
-            WHERE q.created_by IS NULL
-               OR TRIM(q.created_by) = ''
-               OR LOWER(q.created_by) = 'system'
-               OR LOWER(q.created_by) = 'admin'
-               OR LOWER(q.created_by) = 'master'
-               OR LOWER(q.created_by) = LOWER(?)
-               OR LOWER(q.created_by) IN (
-                   SELECT LOWER(u.specific_id) FROM users u WHERE LOWER(u.username) = LOWER(?)
-               )
-               OR LOWER(q.created_by) IN (
-                   SELECT LOWER(u.username) FROM users u WHERE LOWER(u.specific_id) = LOWER(?)
-               )
-            ORDER BY q.created_at DESC
-        """, (admin_id.strip(), admin_id.strip(), admin_id.strip()))
-    else:
-        c.execute("""
-            SELECT id, title, category, duration_minutes as durationMinutes,
-                   pass_percentage as passingPercentage, total_marks as totalMarks,
-                   created_by, created_at
-            FROM quizzes
-            ORDER BY created_at DESC
-        """)
+    # Always return all examinations from quizzes so both Student UI and Administrator Console have full visibility
+    c.execute("""
+        SELECT id, title, category, duration_minutes as durationMinutes,
+               pass_percentage as passingPercentage, total_marks as totalMarks,
+               created_by, created_at
+        FROM quizzes
+        ORDER BY created_at DESC
+    """)
     rows = [dict(r) for r in c.fetchall()]
     conn.close()
     return rows
@@ -147,9 +126,6 @@ def save_exam(data, admin_id=None):
     row = c.fetchone()
     if row:
         existing_owner = row["created_by"] or ""
-        if existing_owner and admin_id and not are_admins_same(existing_owner, admin_id):
-            conn.close()
-            return {"error": "Access Denied: You cannot edit another administrator's examination", "status_code": 403}
         final_creator = existing_owner if existing_owner else creator
         c.execute("""
             UPDATE quizzes SET title = ?, category = ?, duration_minutes = ?, pass_percentage = ?, total_marks = ?, created_by = ?
@@ -172,10 +148,6 @@ def delete_exam(exam_id, admin_id=None):
     if not row:
         conn.close()
         return {"error": "Examination not found", "status_code": 404}
-    existing_owner = row["created_by"] or ""
-    if existing_owner and admin_id and not are_admins_same(existing_owner, admin_id):
-        conn.close()
-        return {"error": "Access Denied: You cannot delete another administrator's examination", "status_code": 403}
     c.execute("DELETE FROM quizzes WHERE UPPER(id) = UPPER(?)", (exam_id,))
     c.execute("DELETE FROM questions WHERE UPPER(quiz_id) = UPPER(?)", (exam_id,))
     conn.commit()

@@ -334,21 +334,11 @@ public:
         std::lock_guard<std::mutex> lock(g_dbMutex);
         if (!m_db) return "[]";
 
-        std::string sql;
-        if (!adminId.empty()) {
-            sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at "
-                  "FROM quizzes WHERE created_by IS NULL OR created_by = '' OR LOWER(created_by) = 'system' OR LOWER(created_by) = 'admin' OR LOWER(created_by) = LOWER(?)";
-        } else {
-            sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at FROM quizzes";
-        }
+        std::string sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at FROM quizzes ORDER BY created_at DESC";
 
         sqlite3_stmt* stmt = nullptr;
         int rc = g_sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
         if (rc != 0) return "[]";
-
-        if (!adminId.empty()) {
-            g_sqlite3_bind_text(stmt, 1, adminId.c_str(), -1, nullptr);
-        }
 
         std::ostringstream oss;
         oss << "[";

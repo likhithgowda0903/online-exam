@@ -2470,11 +2470,11 @@
           }
         } catch (e) { }
 
-        // Push any locally created subjects (that have a designated creator) to SQLite online_exam.db
+        // Push any locally created subjects to SQLite online_exam.db
         try {
           for (const examId in allExams) {
             const localExam = allExams[examId];
-            if (localExam && (localExam.created_by || localExam.admin_id) && !sqliteExamMap[examId]) {
+            if (localExam && !sqliteExamMap[examId]) {
               fetch('/api/exams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2643,10 +2643,9 @@
     // =========================================================================
     // ADMINISTRATOR-WISE EXAMINATION ISOLATION & OWNERSHIP HELPER
     // =========================================================================
-    function getAdminExaminations() {
-      if (!state.user || state.user.role !== 'admin') {
-        return Object.values(allExams);
-      }
+    function isCurrentAdminOwner(exam) {
+      if (!exam) return false;
+      if (!state.user || state.user.role !== 'admin') return true;
       const currentAdminId = (state.user.id || '').toString().toLowerCase();
       const currentAdminSpecificId = (state.user.specific_id || state.user.rollId || '').toString().toLowerCase();
       const currentAdminUser = (state.user.username || '').toString().toLowerCase();
@@ -2661,23 +2660,32 @@
         currentAdminName
       ].filter(Boolean));
 
-      return Object.values(allExams).filter(exam => {
-        if (!exam) return false;
-        const creators = [
-          exam.created_by,
-          exam.creator_id,
-          exam.admin_id,
-          exam.creator_username
-        ].filter(Boolean).map(c => c.toString().toLowerCase());
+      const creators = [
+        exam.created_by,
+        exam.creator_id,
+        exam.admin_id,
+        exam.creator_username
+      ].filter(Boolean).map(c => c.toString().toLowerCase());
 
-        // If the examination has no specific creator assigned (e.g. system default OOP exam or portal curriculum),
-        // it is an official portal curriculum exam and visible to all administrators to manage.
-        if (creators.length === 0 || creators.includes('system') || creators.includes('admin') || creators.includes('master')) {
-          return true;
-        }
+      if (creators.length === 0 || creators.includes('system') || creators.includes('admin') || creators.includes('master')) {
+        return true;
+      }
 
-        return creators.some(c => adminIdentifiers.has(c));
-      });
+      return creators.some(c => adminIdentifiers.has(c));
+    }
+
+    // Always returns all active portal examinations so any exam in the Student UI is 100% visible in the Administrator Console
+    function getAdminExaminations() {
+      if (!allExams || typeof allExams !== 'object') return [];
+      return Object.values(allExams).filter(Boolean);
+    }
+
+    function setAdminExamFilter(filter) {
+      state.adminExamFilter = filter;
+      const container = document.getElementById('appViewport');
+      if (container) {
+        renderAdminDashboard(container);
+      }
     }
 
     // System State with Active Candidate or Administrator Session
@@ -2693,6 +2701,7 @@
       regRole: 'student', // 'student' or 'admin'
       adminActiveTab: 'questions',
       adminSelectedExam: '',
+      adminExamFilter: 'all',
       questionSearchQuery: '',
       authRoleSelected: 'student',
       tempUsername: '',
@@ -4631,7 +4640,7 @@
     function switchAdminExamPool(examId) {
       const adminExams = getAdminExaminations();
       if (examId && !adminExams.some(e => e.id === examId)) {
-        showToastNotification("⛔ Access Denied: You cannot access an examination created by another administrator.");
+        showToastNotification("⚠️ Examination not found in active registry.");
         return;
       }
       state.adminSelectedExam = examId;
@@ -4750,7 +4759,7 @@
       const examId = document.getElementById('newQExamSelect').value;
       const adminExams = getAdminExaminations();
       if (!adminExams.some(e => e.id === examId)) {
-        showToastNotification("⛔ Access Denied: You do not have permission to add questions to an examination created by another administrator.");
+        showToastNotification("⚠️ Please select a valid course examination module.");
         return;
       }
       const text = document.getElementById('newQText').value.trim();
@@ -4811,7 +4820,7 @@
     function deleteQuestionFromPool(examId, idx) {
       const adminExams = getAdminExaminations();
       if (!adminExams.some(e => e.id === examId)) {
-        showToastNotification("⛔ Access Denied: You do not have permission to delete questions from an examination created by another administrator.");
+        showToastNotification("⚠️ Examination not found.");
         return;
       }
 
@@ -4881,15 +4890,15 @@
       renderAdminDashboard(container);
     }
 
-    // Function to permanently delete an examination from Administrator Interface
+    // Function to permanently delete examinations from Administrator Interface
     function deleteAllExams() {
       const adminExams = getAdminExaminations();
       const count = adminExams.length;
       if (count === 0) {
-        showToastNotification("ℹ️ There are no examinations created by your account to delete.");
+        showToastNotification("ℹ️ There are no active examinations to delete.");
         return;
       }
-      if (!confirm(`Are you sure you want to delete your ${count} examination(s)?\n\nThis will permanently remove only the examinations created by your administrator account.`)) {
+      if (!confirm(`Are you sure you want to permanently delete all ${count} examination(s)?\n\nThis will remove the examinations from both Administrator and Student interfaces.`)) {
         return;
       }
 
@@ -4941,11 +4950,11 @@
 
       const adminExams = getAdminExaminations();
       if (!adminExams.some(e => e.id === examId)) {
-        showToastNotification("⛔ Access Denied: You cannot delete an examination created by another administrator.");
+        showToastNotification("⚠️ Examination not found in active registry.");
         return;
       }
 
-      const confirmed = confirm(`Are you sure you want to permanently delete examination:\n\n"${exam.title}" (${exam.id})?\n\nThis will remove the course examination and its question pool.`);
+      const confirmed = confirm(`Are you sure you want to permanently delete examination:\n\n"${exam.title}" (${exam.id})?\n\nThis will remove the course examination and its question pool from both Administrator and Student portals.`);
       if (!confirmed) return;
 
       const examTitle = exam.title;
@@ -5195,7 +5204,7 @@
               <!-- COURSE SELECTOR PILLS -->
               <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
                 ${adminExams.length === 0 ? `
-                  <div style="color: var(--text-muted); font-size: var(--fs-sm); padding: 8px 0;">No active course modules found for your administrator account. Click "Create New Examination" to add your first exam.</div>
+                  <div style="color: var(--text-muted); font-size: var(--fs-sm); padding: 8px 0;">No active course modules found in registry. Click "Create New Examination" to add your first exam.</div>
                 ` : adminExams.map(e => {
         const eid = e.id;
         const exam = e;
@@ -5290,7 +5299,7 @@
           <!-- TAB CONTENT 2: QUIZZES -->
           ${activeTab === 'quizzes' ? `
             <div class="card-frame" style="padding: 22px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
                 <div>
                   <h3 style="color: #fff; font-size: var(--fs-lg); font-weight: 700;">Official Course Quizzes & Modules</h3>
                   <p style="color: var(--text-dim); font-size: var(--fs-sm); margin-top: 2px;">Real-time management of exam titles, durations, pass thresholds, and randomized question pool banks.</p>
@@ -5307,7 +5316,18 @@
                 </div>
               </div>
 
-                            <div class="table-responsive-admin">
+              <!-- VIEW FILTER: All Portal Examinations vs My Created Examinations -->
+              <div style="display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: var(--fs-xs); color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-right: 4px;">View:</span>
+                <button class="auth-tab-btn ${(state.adminExamFilter || 'all') === 'all' ? 'active' : ''}" onclick="setAdminExamFilter('all')" style="padding: 5px 14px; font-size: var(--fs-xs); border-radius: var(--radius-full); ${(state.adminExamFilter || 'all') === 'all' ? 'background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid #3b82f6; font-weight: 700;' : 'background: rgba(255,255,255,0.05); color: var(--text-muted);'}">
+                  🌐 All Examinations (${adminExams.length})
+                </button>
+                <button class="auth-tab-btn ${(state.adminExamFilter || 'all') === 'mine' ? 'active' : ''}" onclick="setAdminExamFilter('mine')" style="padding: 5px 14px; font-size: var(--fs-xs); border-radius: var(--radius-full); ${(state.adminExamFilter || 'all') === 'mine' ? 'background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid #10b981; font-weight: 700;' : 'background: rgba(255,255,255,0.05); color: var(--text-muted);'}">
+                  👤 My Created (${adminExams.filter(e => isCurrentAdminOwner(e)).length})
+                </button>
+              </div>
+
+              <div class="table-responsive-admin">
                 <table class="admin-exam-table">
                   <colgroup>
                     <col style="width: 25%;">
@@ -5330,53 +5350,74 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${adminExams.length === 0 ? `
-                    <tr>
-                      <td colspan="7" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                        <div style="font-size: 2.2rem; margin-bottom: 10px;">📋</div>
-                        <div style="font-size: 1.1rem; font-weight: 800; color: #fff;">No Examinations Created by Your Account</div>
-                        <div style="font-size: 0.85rem; margin-top: 6px; color: #94a3b8;">Click "➕ New Examination" above to configure your course exam modules.</div>
-                      </td>
-                    </tr>
-                  ` : adminExams.map(e => {
-        const poolCount = masterQuestionPools[e.id] ? masterQuestionPools[e.id].length : (e.totalQuestions || 20);
-        return `
-                        <tr>
-                          <td class="admin-exam-col-title" style="text-align: left;">
-                            <div style="font-weight: 800; color: #fff; font-size: var(--fs-base); line-height: 1.35;">${e.title}</div>
-                            <div style="font-size: var(--fs-xs); color: #60a5fa; margin-top: 3px; font-weight: 600;">Code: ${e.id} &bull; Master Pool Active</div>
-                          </td>
-                          <td class="admin-exam-col-category" style="text-align: left;">
-                            <span class="badge-pill blue" style="font-weight: 700; font-size: var(--fs-xs);">${e.category || 'Core Computer Science'}</span>
-                          </td>
-                          <td class="admin-exam-col-questions" style="text-align: center;">
-                            <strong style="color: #fff; font-size: var(--fs-base);">${poolCount}</strong> <span style="color: var(--text-muted); font-size: var(--fs-xs);">MCQs</span>
-                          </td>
-                          <td class="admin-exam-col-duration" style="text-align: center;">
-                            <span style="color: #fff; font-weight: 700;">${e.durationMinutes || 15}</span> <span style="color: var(--text-muted); font-size: var(--fs-xs);">mins</span>
-                          </td>
-                          <td class="admin-exam-col-pass" style="text-align: center;">
-                            <strong style="color: #34d399; font-size: var(--fs-base);">${e.passingPercentage || 60}%</strong>
-                          </td>
-                          <td class="admin-exam-col-marks" style="text-align: center;">
-                            <strong style="color: #cbd5e1; font-size: var(--fs-base);">100</strong> <span style="color: var(--text-muted); font-size: var(--fs-xs);">pts</span>
-                          </td>
-                          <td class="admin-exam-col-actions" style="text-align: right;">
-                            <div class="admin-action-btn-group">
-                              <button class="btn-action-outline admin-exam-btn" style="border-color: #8b5cf6; color: #c4b5fd;" onclick="switchAdminExamPool('${e.id}'); switchAdminTab('questions');" title="Manage Questions for ${e.id}">
-                                <span>❓</span> Manage Questions
-                              </button>
-                              <button class="btn-action-outline admin-exam-btn" style="border-color: #3b82f6; color: #93c5fd;" onclick="state.selectedExamId = '${e.id}'; showView('exam-room');" title="Preview Examination">
-                                <span>▶</span> Preview
-                              </button>
-                              <button class="btn-action-outline admin-exam-btn" style="border-color: #ef4444; color: #fca5a5;" onclick="deleteExam('${e.id}')" title="Delete Examination">
-                                <span>🗑️</span> Delete Exam
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      `;
-      }).join('')}
+                    ${(() => {
+                      const displayedExams = (state.adminExamFilter === 'mine')
+                        ? adminExams.filter(e => isCurrentAdminOwner(e))
+                        : adminExams;
+
+                      if (displayedExams.length === 0) {
+                        return `
+                          <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                              <div style="font-size: 2.2rem; margin-bottom: 10px;">📋</div>
+                              <div style="font-size: 1.1rem; font-weight: 800; color: #fff;">${state.adminExamFilter === 'mine' ? 'No Examinations Created by Your Account Yet' : 'No Examinations in Registry'}</div>
+                              <div style="font-size: 0.85rem; margin-top: 6px; color: #94a3b8;">${state.adminExamFilter === 'mine' ? 'Click "🌐 All Examinations" above to view portal exams or "➕ New Examination" to create one.' : 'Click "➕ New Examination" above to configure your course exam modules.'}</div>
+                            </td>
+                          </tr>
+                        `;
+                      }
+
+                      return displayedExams.map(e => {
+                        const poolCount = masterQuestionPools[e.id] ? masterQuestionPools[e.id].length : (e.totalQuestions || 20);
+                        const isOwner = isCurrentAdminOwner(e);
+                        const isOfficial = !e.created_by || ['system', 'admin', 'master'].includes((e.created_by || '').toString().toLowerCase());
+                        const authorBadge = isOfficial
+                          ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: #93c5fd; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-xs); padding: 2px 7px; font-weight: 600;">● Core Curriculum</span>`
+                          : (isOwner
+                            ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-xs); padding: 2px 7px; font-weight: 600;">● Created by You</span>`
+                            : `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: #c4b5fd; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-xs); padding: 2px 7px; font-weight: 600;">● Author: ${e.created_by}</span>`);
+
+                        return `
+                          <tr>
+                            <td class="admin-exam-col-title" style="text-align: left;">
+                              <div style="font-weight: 800; color: #fff; font-size: var(--fs-base); line-height: 1.35;">${e.title}</div>
+                              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                <span style="font-size: var(--fs-xs); color: #60a5fa; font-weight: 600;">Code: ${e.id}</span>
+                                ${authorBadge}
+                              </div>
+                            </td>
+                            <td class="admin-exam-col-category" style="text-align: left;">
+                              <span class="badge-pill blue" style="font-weight: 700; font-size: var(--fs-xs);">${e.category || 'Core Computer Science'}</span>
+                            </td>
+                            <td class="admin-exam-col-questions" style="text-align: center;">
+                              <strong style="color: #fff; font-size: var(--fs-base);">${poolCount}</strong> <span style="color: var(--text-muted); font-size: var(--fs-xs);">MCQs</span>
+                            </td>
+                            <td class="admin-exam-col-duration" style="text-align: center;">
+                              <span style="color: #fff; font-weight: 700;">${e.durationMinutes || 15}</span> <span style="color: var(--text-muted); font-size: var(--fs-xs);">mins</span>
+                            </td>
+                            <td class="admin-exam-col-pass" style="text-align: center;">
+                              <strong style="color: #34d399; font-size: var(--fs-base);">${e.passingPercentage || 60}%</strong>
+                            </td>
+                            <td class="admin-exam-col-marks" style="text-align: center;">
+                              <strong style="color: #cbd5e1; font-size: var(--fs-base);">${e.totalMarks || 100}</strong> <span style="color: var(--text-muted); font-size: var(--fs-xs);">pts</span>
+                            </td>
+                            <td class="admin-exam-col-actions" style="text-align: right;">
+                              <div class="admin-action-btn-group">
+                                <button class="btn-action-outline admin-exam-btn" style="border-color: #8b5cf6; color: #c4b5fd;" onclick="switchAdminExamPool('${e.id}'); switchAdminTab('questions');" title="Manage Questions for ${e.id}">
+                                  <span>❓</span> Questions
+                                </button>
+                                <button class="btn-action-outline admin-exam-btn" style="border-color: #3b82f6; color: #93c5fd;" onclick="state.selectedExamId = '${e.id}'; showView('exam-room');" title="Preview Examination">
+                                  <span>▶</span> Preview
+                                </button>
+                                <button class="btn-action-outline admin-exam-btn" style="border-color: #ef4444; color: #fca5a5;" onclick="deleteExam('${e.id}')" title="Delete Examination">
+                                  <span>🗑️</span> Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('');
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -7401,7 +7442,7 @@
       if (state.user && state.user.role === 'admin') {
         const adminExams = getAdminExaminations();
         if (state.selectedExamId && !adminExams.some(e => e.id === state.selectedExamId)) {
-          showToastNotification("⛔ Access Denied: You cannot preview or access an examination created by another administrator.");
+          showToastNotification("⚠️ Examination not found.");
           showView('admin-dashboard');
           return;
         }

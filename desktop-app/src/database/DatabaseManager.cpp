@@ -540,39 +540,12 @@ std::vector<Quiz> DatabaseManager::getAllQuizzes(bool loadQuestions) {
 }
 
 std::vector<Quiz> DatabaseManager::getQuizzesByAdmin(const QString& adminId, bool loadQuestions) {
-    std::vector<Quiz> quizzes;
-    QSqlQuery query(m_db);
-    query.prepare("SELECT id, title, category, description, duration_minutes, pass_percentage, total_marks, created_by FROM quizzes WHERE created_by IS NULL OR created_by = '' OR LOWER(created_by) = 'system' OR LOWER(created_by) = 'admin' OR LOWER(created_by) = LOWER(:adminId) ORDER BY id DESC;");
-    query.bindValue(":adminId", adminId.trimmed());
-    if (query.exec()) {
-        while (query.next()) {
-            int id = query.value("id").toInt();
-            QString title = query.value("title").toString();
-            QString cat = query.value("category").toString();
-            QString desc = query.value("description").toString();
-            int dur = query.value("duration_minutes").toInt();
-            double pass = query.value("pass_percentage").toDouble();
-            int total = query.value("total_marks").toInt();
-            QString creator = query.value("created_by").toString();
-
-            Quiz q(id, title, cat, desc, dur, pass, total, creator);
-            if (loadQuestions) {
-                q.setQuestions(getQuestionsForQuiz(id));
-            }
-            quizzes.push_back(q);
-        }
-    }
-    return quizzes;
+    // Return all examinations so administrators have full oversight of what candidates see
+    return getAllQuizzes(loadQuestions);
 }
 
 int DatabaseManager::getTotalQuizzesCountByAdmin(const QString& adminId) {
-    QSqlQuery query(m_db);
-    query.prepare("SELECT COUNT(*) FROM quizzes WHERE LOWER(created_by) = LOWER(:adminId);");
-    query.bindValue(":adminId", adminId.trimmed());
-    if (query.exec() && query.next()) {
-        return query.value(0).toInt();
-    }
-    return 0;
+    return getTotalQuizzesCount();
 }
 
 std::optional<Quiz> DatabaseManager::getQuizById(int quizId, bool loadQuestions) {
