@@ -2670,9 +2670,10 @@
           exam.creator_username
         ].filter(Boolean).map(c => c.toString().toLowerCase());
 
-        if (creators.length === 0) {
-          // Existing unassigned examinations are handled safely
-          return false;
+        // If the examination has no specific creator assigned (e.g. system default OOP exam or portal curriculum),
+        // it is an official portal curriculum exam and visible to all administrators to manage.
+        if (creators.length === 0 || creators.includes('system') || creators.includes('admin') || creators.includes('master')) {
+          return true;
         }
 
         return creators.some(c => adminIdentifiers.has(c));

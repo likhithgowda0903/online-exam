@@ -100,13 +100,18 @@ def get_exams(admin_id=None):
     conn = get_connection()
     c = conn.cursor()
     if admin_id and admin_id.strip():
-        # Match creator by username, id, or email
+        # Match creator by username, id, or email, or unassigned/system exams
         c.execute("""
             SELECT q.id, q.title, q.category, q.duration_minutes as durationMinutes,
                    q.pass_percentage as passingPercentage, q.total_marks as totalMarks,
                    q.created_by, q.created_at
             FROM quizzes q
-            WHERE LOWER(q.created_by) = LOWER(?)
+            WHERE q.created_by IS NULL
+               OR TRIM(q.created_by) = ''
+               OR LOWER(q.created_by) = 'system'
+               OR LOWER(q.created_by) = 'admin'
+               OR LOWER(q.created_by) = 'master'
+               OR LOWER(q.created_by) = LOWER(?)
                OR LOWER(q.created_by) IN (
                    SELECT LOWER(u.specific_id) FROM users u WHERE LOWER(u.username) = LOWER(?)
                )

@@ -336,7 +336,8 @@ public:
 
         std::string sql;
         if (!adminId.empty()) {
-            sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at FROM quizzes WHERE LOWER(created_by) = LOWER(?)";
+            sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at "
+                  "FROM quizzes WHERE created_by IS NULL OR created_by = '' OR LOWER(created_by) = 'system' OR LOWER(created_by) = 'admin' OR LOWER(created_by) = LOWER(?)";
         } else {
             sql = "SELECT id, title, category, duration_minutes, pass_percentage, total_marks, created_by, created_at FROM quizzes";
         }

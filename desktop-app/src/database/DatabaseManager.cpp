@@ -542,7 +542,7 @@ std::vector<Quiz> DatabaseManager::getAllQuizzes(bool loadQuestions) {
 std::vector<Quiz> DatabaseManager::getQuizzesByAdmin(const QString& adminId, bool loadQuestions) {
     std::vector<Quiz> quizzes;
     QSqlQuery query(m_db);
-    query.prepare("SELECT id, title, category, description, duration_minutes, pass_percentage, total_marks, created_by FROM quizzes WHERE LOWER(created_by) = LOWER(:adminId) ORDER BY id DESC;");
+    query.prepare("SELECT id, title, category, description, duration_minutes, pass_percentage, total_marks, created_by FROM quizzes WHERE created_by IS NULL OR created_by = '' OR LOWER(created_by) = 'system' OR LOWER(created_by) = 'admin' OR LOWER(created_by) = LOWER(:adminId) ORDER BY id DESC;");
     query.bindValue(":adminId", adminId.trimmed());
     if (query.exec()) {
         while (query.next()) {
