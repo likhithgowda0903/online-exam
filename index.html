@@ -594,12 +594,13 @@
       letter-spacing: 0.05em;
     }
 
-    /* UNIFIED 5-TIER BUTTON DESIGN SYSTEM */
+    /* UNIFIED 4-TIER BUTTON DESIGN SYSTEM (Accessibility & Visual Cohesion) */
     .btn-primary,
     .btn-secondary,
     .btn-danger,
     .btn-tab,
     .btn-icon,
+    .auth-tab-btn,
     .btn-resume-glow,
     .btn-action-outline {
       font-family: inherit;
@@ -613,6 +614,19 @@
       text-decoration: none;
       line-height: 1.2;
       border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible,
+    .btn-danger:focus-visible,
+    .btn-tab:focus-visible,
+    .btn-icon:focus-visible,
+    .auth-tab-btn:focus-visible,
+    .btn-resume-glow:focus-visible,
+    .btn-action-outline:focus-visible {
+      outline: 2px solid #60a5fa;
+      outline-offset: 2px;
     }
 
     /* 1. Primary Solid Action Button */
@@ -621,7 +635,7 @@
       background: var(--accent-blue);
       color: var(--text-white);
       border-color: transparent;
-      padding: 8px 16px;
+      padding: 10px 18px;
       font-size: var(--fs-sm);
       font-weight: 700;
       box-shadow: 0 4px 14px var(--accent-blue-glow);
@@ -634,13 +648,20 @@
       box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55);
     }
 
+    /* Full-width block modifier */
+    .btn-block {
+      width: 100%;
+      padding: 12px 18px;
+      font-size: var(--fs-base);
+    }
+
     /* 2. Secondary Outline / Subtle Surface Button */
     .btn-secondary,
     .btn-action-outline {
       background: rgba(30, 41, 59, 0.4);
       border-color: #233e72;
       color: var(--text-blue);
-      padding: 6px 14px;
+      padding: 8px 16px;
       font-size: var(--fs-sm);
       font-weight: 600;
     }
@@ -652,12 +673,12 @@
       color: var(--text-white);
     }
 
-    /* 3. Danger Outline Action Button */
+    /* 3. Danger Action Button */
     .btn-danger {
       background: rgba(239, 68, 68, 0.12);
       border-color: rgba(239, 68, 68, 0.4);
       color: #fca5a5;
-      padding: 6px 12px;
+      padding: 8px 16px;
       font-size: var(--fs-sm);
       font-weight: 600;
     }
@@ -668,26 +689,31 @@
       color: #fff;
     }
 
-    /* 4. Tab Segmented Button */
-    .btn-tab {
-      background: transparent;
-      border-color: transparent;
+    /* 4. Tab / Segmented Button */
+    .btn-tab,
+    .auth-tab-btn {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text-muted);
-      padding: 8px 14px;
+      padding: 10px 16px;
       font-size: var(--fs-sm);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .btn-tab.active,
-    .btn-tab:hover {
-      background: rgba(37, 99, 235, 0.16);
+    .auth-tab-btn.active,
+    .btn-tab:hover,
+    .auth-tab-btn:hover {
+      background: var(--accent-blue);
       color: var(--text-white);
-      border-color: var(--accent-blue);
+      border-color: transparent;
+      box-shadow: 0 4px 14px var(--accent-blue-glow);
     }
 
-    /* 5. Circular Icon Button */
+    /* 5. Utility / Icon Button */
     .btn-icon,
-    .icon-btn-bell {
+    .icon-btn-bell,
+    .input-toggle-pwd {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-primary);
@@ -699,8 +725,22 @@
     }
 
     .btn-icon:hover,
-    .icon-btn-bell:hover {
+    .icon-btn-bell:hover,
+    .input-toggle-pwd:hover {
       background: var(--bg-card-hover);
+      color: var(--text-white);
+    }
+
+    .input-toggle-pwd {
+      background: transparent;
+      border: none;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      color: #94a3b8;
+    }
+    .input-toggle-pwd:hover {
+      background: transparent;
       color: var(--text-white);
     }
 
@@ -3285,10 +3325,10 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button type="button" class="btn-resume-glow" style="padding: 7px 14px; font-size: var(--fs-sm);" onclick="showView('dashboard')">
+                  <button type="button" class="btn-secondary" onclick="showView('dashboard')">
                     Dashboard →
                   </button>
-                  <button type="button" class="btn-action-outline" style="border-color: #ef4444; color: #f87171; padding: 7px 12px; font-size: var(--fs-sm);" onclick="handleSignOut()">
+                  <button type="button" class="btn-danger" onclick="handleSignOut()">
                     Sign Out
                   </button>
                 </div>
@@ -3296,11 +3336,11 @@
             ` : ''}
 
             <!-- Role Tabs: Student Sign In vs Administrator Sign In -->
-            <div style="display: flex; gap: 10px; margin-bottom: 24px;">
-              <button type="button" class="auth-tab-btn ${state.authTab === 'signin' ? 'active' : ''}" onclick="switchAuthTab('signin')" style="flex: 1; padding: 11px 16px; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; ${state.authTab === 'signin' ? 'background: #1d4ed8; color: #ffffff; border: none; box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);' : 'background: rgba(15, 23, 42, 0.45); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.08);'}">
+            <div role="tablist" aria-label="Sign In Options" style="display: flex; gap: 10px; margin-bottom: 24px;">
+              <button type="button" role="tab" aria-selected="${state.authTab === 'signin'}" class="btn-tab ${state.authTab === 'signin' ? 'active' : ''}" onclick="switchAuthTab('signin')" style="flex: 1;">
                 <span>👤</span> Student Sign In
               </button>
-              <button type="button" class="auth-tab-btn ${state.authTab === 'admin' ? 'active' : ''}" onclick="switchAuthTab('admin')" style="flex: 1; padding: 11px 16px; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; ${state.authTab === 'admin' ? 'background: #1d4ed8; color: #ffffff; border: none; box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);' : 'background: rgba(15, 23, 42, 0.45); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.08);'}">
+              <button type="button" role="tab" aria-selected="${state.authTab === 'admin'}" class="btn-tab ${state.authTab === 'admin' ? 'active' : ''}" onclick="switchAuthTab('admin')" style="flex: 1;">
                 <span>🛡️</span> Administrator Sign In
               </button>
             </div>
@@ -3323,7 +3363,7 @@
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                     <input type="password" id="authPassword" class="auth-input" placeholder="Enter password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                    <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('authPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                    <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                   </div>
                 </div>
 
@@ -3336,7 +3376,7 @@
                   </a>
                 </div>
 
-                <button type="submit" style="width: 100%; justify-content: center; padding: 13px; font-size: 15px; font-weight: 700; color: #ffffff; background: #1d4ed8; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.4); transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">
+                <button type="submit" class="btn-primary btn-block">
                   Sign In as Student ▶
                 </button>
               </form>
@@ -3366,7 +3406,7 @@
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                     <input type="password" id="authAdminPassword" class="auth-input" placeholder="Enter administrator password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                    <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('authAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                    <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                   </div>
                 </div>
 
@@ -3377,7 +3417,9 @@
                   <a href="javascript:void(0)" onclick="openAdminForgotPassword(event)" style="color: #38bdf8; text-decoration: none; font-weight: 600; cursor: pointer;">Forgot Password?</a>
                 </div>
 
-                <button type="submit" style="width: 100%; justify-content: center; padding: 13px; font-size: 15px; font-weight: 700; color: #ffffff; background: #1d4ed8; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.4); transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">
+                <button type="submit" class="btn-primary btn-block">
+                  Sign In as Administrator ▶
+                </button>
                   Sign In as Administrator ▶
                 </button>
               </form>
@@ -3416,10 +3458,10 @@
                   </div>
 
                   <div style="display: flex; gap: 12px;">
-                    <button type="button" onclick="switchAuthTab('signin')" style="flex: 1; padding: 12px; font-size: 14px; font-weight: 700; color: #94a3b8; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <button type="button" class="btn-secondary" onclick="switchAuthTab('signin')" style="flex: 1;">
                       ← Back to Sign In
                     </button>
-                    <button type="submit" style="flex: 1.4; padding: 12px; font-size: 14px; font-weight: 700; color: #ffffff; background: #1d4ed8; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35); transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">
+                    <button type="submit" class="btn-primary" style="flex: 1.4;">
                       Verify Account ▶
                     </button>
                   </div>
@@ -3439,7 +3481,7 @@
                     <div class="input-field-wrap" style="position: relative;">
                       <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                       <input type="password" id="newStudentPassword" class="auth-input" placeholder="Minimum 6 characters" minlength="6" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                      <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('newStudentPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                      <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('newStudentPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                     </div>
                   </div>
 
@@ -3448,15 +3490,15 @@
                     <div class="input-field-wrap" style="position: relative;">
                       <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                       <input type="password" id="confirmStudentPassword" class="auth-input" placeholder="Re-enter new password" minlength="6" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                      <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('confirmStudentPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                      <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('confirmStudentPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                     </div>
                   </div>
 
                   <div style="display: flex; gap: 12px;">
-                    <button type="button" onclick="switchAuthTab('signin')" style="flex: 1; padding: 12px; font-size: 14px; font-weight: 700; color: #94a3b8; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <button type="button" class="btn-secondary" onclick="switchAuthTab('signin')" style="flex: 1;">
                       Cancel
                     </button>
-                    <button type="submit" style="flex: 1.4; padding: 12px; font-size: 14px; font-weight: 700; color: #ffffff; background: #16a34a; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35); transition: background 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                    <button type="submit" class="btn-primary" style="flex: 1.4; background: #16a34a;">
                       Reset Password ✓
                     </button>
                   </div>
@@ -3491,10 +3533,10 @@
                   </div>
 
                   <div style="display: flex; gap: 12px;">
-                    <button type="button" onclick="switchAuthTab('admin')" style="flex: 1; padding: 12px; font-size: 14px; font-weight: 700; color: #94a3b8; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <button type="button" class="btn-secondary" onclick="switchAuthTab('admin')" style="flex: 1;">
                       ← Back to Sign In
                     </button>
-                    <button type="submit" style="flex: 1.4; padding: 12px; font-size: 14px; font-weight: 700; color: #ffffff; background: #1d4ed8; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35); transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">
+                    <button type="submit" class="btn-primary" style="flex: 1.4;">
                       Verify Account ▶
                     </button>
                   </div>
@@ -3514,7 +3556,7 @@
                     <div class="input-field-wrap" style="position: relative;">
                       <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                       <input type="password" id="newAdminPassword" class="auth-input" placeholder="Minimum 6 characters" minlength="6" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                      <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('newAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                      <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('newAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                     </div>
                   </div>
 
@@ -3523,15 +3565,15 @@
                     <div class="input-field-wrap" style="position: relative;">
                       <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
                       <input type="password" id="confirmAdminPassword" class="auth-input" placeholder="Re-enter new password" minlength="6" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                      <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('confirmAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
+                      <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('confirmAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                     </div>
                   </div>
 
                   <div style="display: flex; gap: 12px;">
-                    <button type="button" onclick="switchAuthTab('admin')" style="flex: 1; padding: 12px; font-size: 14px; font-weight: 700; color: #94a3b8; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <button type="button" class="btn-secondary" onclick="switchAuthTab('admin')" style="flex: 1;">
                       Cancel
                     </button>
-                    <button type="submit" style="flex: 1.4; padding: 12px; font-size: 14px; font-weight: 700; color: #ffffff; background: #16a34a; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35); transition: background 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                    <button type="submit" class="btn-primary" style="flex: 1.4; background: #16a34a;">
                       Reset Password ✓
                     </button>
                   </div>
@@ -3541,11 +3583,11 @@
 
             <!-- REGISTRATION VIEW (Supports both Student & Administrator) -->
             <div id="authRegisterPanel" style="${state.authTab === 'register' ? 'display: block;' : 'display: none;'}">
-              <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button type="button" class="role-pill-btn ${state.regRole !== 'admin' ? 'active' : ''}" onclick="setRegisterRole('student')" style="flex: 1; padding: 10px 14px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; ${state.regRole !== 'admin' ? 'background: #1d4ed8; color: #fff; border: none;' : 'background: rgba(15, 23, 42, 0.45); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);'}">
+              <div role="tablist" aria-label="Registration Role Options" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button type="button" role="tab" aria-selected="${state.regRole !== 'admin'}" class="btn-tab ${state.regRole !== 'admin' ? 'active' : ''}" onclick="setRegisterRole('student')" style="flex: 1;">
                   🎓 Register Student
                 </button>
-                <button type="button" class="role-pill-btn ${state.regRole === 'admin' ? 'active' : ''}" onclick="setRegisterRole('admin')" style="flex: 1; padding: 10px 14px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; ${state.regRole === 'admin' ? 'background: #1d4ed8; color: #fff; border: none;' : 'background: rgba(15, 23, 42, 0.45); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);'}">
+                <button type="button" role="tab" aria-selected="${state.regRole === 'admin'}" class="btn-tab ${state.regRole === 'admin' ? 'active' : ''}" onclick="setRegisterRole('admin')" style="flex: 1;">
                   🛡️ Register Administrator
                 </button>
               </div>
@@ -3599,7 +3641,7 @@
                   </div>
                 </div>
 
-                <button type="submit" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 700; color: #ffffff; background: #1d4ed8; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.4);">
+                <button type="submit" class="btn-primary btn-block">
                   ${state.regRole === 'admin' ? 'Create Administrator Account 🛡️' : 'Create Student Account ▶'}
                 </button>
               </form>
@@ -4572,7 +4614,15 @@
     function switchAdminTab(tabName) {
       state.adminActiveTab = tabName;
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     function switchToStudentSession() {
@@ -4589,44 +4639,46 @@
       const modal = document.getElementById('modalRoot');
       if (modal) modal.style.display = 'block';
       modal.innerHTML = `
-        <div class="modal-backdrop">
-          <div class="modal-box" style="max-width: 580px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h3 style="color: #fff; font-size: var(--fs-xl); font-weight: 800;">➕ Create New Examination Module</h3>
-              <button class="btn-action-outline" onclick="closeModal()">✕</button>
+        <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+          <div class="modal-box" style="max-width: 580px; width: 92%; background: #0c1322; border: 1px solid #1e293b; border-radius: 16px; padding: 28px 30px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7); text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: #a855f7; font-size: 24px; font-weight: 800; line-height: 1;">+</span>
+                <h3 style="color: #ffffff; font-size: 1.25rem; font-weight: 700; margin: 0; letter-spacing: -0.01em;">Create New Examination Module</h3>
+              </div>
+              <button type="button" class="btn-icon" onclick="closeModal()" aria-label="Close modal" style="background: rgba(30, 41, 59, 0.4); border: 1px solid #233e72; border-radius: 8px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 16px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#ffffff'; this.style.borderColor='#38bdf8';" onmouseout="this.style.color='#94a3b8'; this.style.borderColor='#233e72';">✕</button>
             </div>
             <form onsubmit="handleCreateQuizSubmit(event)">
-              <div class="form-group">
-                <label class="form-label">Examination Title</label>
-                <input type="text" id="newQuizTitle" class="auth-input" placeholder="e.g. Cloud Computing & Microservices Architecture" required>
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">EXAMINATION TITLE</label>
+                <input type="text" id="newQuizTitle" class="auth-input" placeholder="e.g. Cloud Computing & Microservices Architecture" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px 14px; color: #ffffff; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none';">
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                  <label class="form-label">Subject Category</label>
-                  <input type="text" id="newQuizCat" class="auth-input" placeholder="e.g. Distributed Systems" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Exam Code</label>
-                  <input type="text" id="newQuizCode" class="auth-input" placeholder="e.g. EX-104" required>
-                </div>
+
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">EXAM CODE</label>
+                <input type="text" id="newQuizCode" class="auth-input" placeholder="e.g. EX-104" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px 14px; color: #ffffff; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none';">
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                <div class="form-group" style="margin-bottom:0;">
-                  <label class="form-label">Duration (Mins)</label>
-                  <input type="number" id="newQuizDur" class="auth-input" value="45" min="5" max="180">
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">DURATION (MINS)</label>
+                  <input type="number" id="newQuizDur" class="auth-input" value="45" min="5" max="360" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px 14px; color: #ffffff; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none';">
                 </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label class="form-label">Pass Percentage</label>
-                  <input type="number" id="newQuizPass" class="auth-input" value="60" min="40" max="90">
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">PASS PERCENTAGE (%)</label>
+                  <input type="number" id="newQuizPass" class="auth-input" value="60" min="1" max="100" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px 14px; color: #ffffff; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none';">
                 </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label class="form-label">Total Marks</label>
-                  <input type="number" id="newQuizMarks" class="auth-input" value="100" min="10" max="200">
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">TOTAL MARKS</label>
+                  <input type="number" id="newQuizMarks" class="auth-input" value="100" min="1" max="1000" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px 14px; color: #ffffff; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.2)';" onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none';">
                 </div>
               </div>
-              <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn-action-outline" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn-resume-glow" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">Save & Initialize Pool</button>
+
+              <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 22px;"></div>
+
+              <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="closeModal()" style="padding: 10px 22px; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid #233e72; background: rgba(30, 41, 59, 0.4); color: #93c5fd; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(30, 41, 59, 0.7)'; this.style.color='#ffffff';" onmouseout="this.style.background='rgba(30, 41, 59, 0.4)'; this.style.color='#93c5fd';">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700; border-radius: 8px; border: none; background: #7c3aed; color: #ffffff; box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#6d28d9'; this.style.boxShadow='0 6px 22px rgba(124, 58, 237, 0.6)';" onmouseout="this.style.background='#7c3aed'; this.style.boxShadow='0 4px 18px rgba(124, 58, 237, 0.45)';">Save & Initialize Pool</button>
               </div>
             </form>
           </div>
@@ -4638,19 +4690,19 @@
     function handleCreateQuizSubmit(event) {
       if (event) event.preventDefault();
       const title = document.getElementById('newQuizTitle').value.trim();
-      const cat = document.getElementById('newQuizCat').value.trim();
       const code = document.getElementById('newQuizCode').value.trim().toUpperCase();
       const dur = parseInt(document.getElementById('newQuizDur').value) || 45;
       const pass = parseInt(document.getElementById('newQuizPass').value) || 60;
+      const marksVal = parseInt(document.getElementById('newQuizMarks').value) || 100;
+      const cat = (document.getElementById('newQuizCat') ? document.getElementById('newQuizCat').value.trim() : '') || 'Core Examination Module';
 
-      if (!title || !cat || !code) {
+      if (!title || !code) {
         showToastNotification("⚠️ Please fill in all required fields.");
         return;
       }
 
       const creatorId = state.user ? (state.user.id || state.user.specific_id || state.user.username) : 'ADMIN';
       const creatorUser = state.user ? (state.user.username || '') : '';
-      const marksVal = parseInt(document.getElementById('newQuizMarks').value) || 100;
 
       allExams[code] = {
         id: code,
@@ -4703,7 +4755,15 @@
         renderSidebarNavigation();
       }
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     // Administrative Question Bank Controls & Helpers
@@ -4716,13 +4776,29 @@
       state.adminSelectedExam = examId;
       state.questionSearchQuery = '';
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     function searchAdminQuestions(val) {
       state.questionSearchQuery = val;
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     function openAddQuestionModal(preselectedExam) {
@@ -4893,7 +4969,15 @@
       }
 
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     window.openAddQuestionModal = openAddQuestionModal;
@@ -4971,7 +5055,15 @@
       showToastNotification(`🗑️ Question #${idx + 1} deleted from ${examId}. Student interface synchronized! (${pool.length} pool questions remaining)`);
 
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     // Function to permanently delete examinations from Administrator Interface
@@ -5022,7 +5114,15 @@
       showToastNotification(`🗑️ Successfully deleted your ${count} examination(s).`);
 
       const container = document.getElementById('appViewport');
-      renderAdminDashboard(container);
+      if (container) {
+        if (state.currentView === 'admin-exams') {
+          renderAdminExamsView(container);
+        } else if (state.currentView === 'admin-questions') {
+          renderAdminQuestionsView(container);
+        } else {
+          renderAdminDashboard(container);
+        }
+      }
     }
 
     function deleteExam(examId) {
