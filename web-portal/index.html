@@ -2383,6 +2383,55 @@
     };
 
     // =========================================================================
+    // SYSTEM STATE WITH ACTIVE CANDIDATE OR ADMINISTRATOR SESSION
+    // =========================================================================
+    const state = {
+      isAuthenticated: false, // Default: launches directly on User Authentication Portal
+      authTab: 'signin',
+      forgotStep: 1,
+      verifiedCandidateKey: null,
+      verifiedCandidateName: '',
+      adminForgotStep: 1,
+      verifiedAdminKey: null,
+      verifiedAdminName: '',
+      regRole: 'student', // 'student' or 'admin'
+      adminActiveTab: 'questions',
+      adminSelectedExam: '',
+      adminExamFilter: 'all',
+      questionSearchQuery: '',
+      authRoleSelected: 'student',
+      tempUsername: '',
+      currentView: 'auth',
+      selectedExamId: '',
+      currentQIndex: 0,
+      examAttempts: {},
+      answers: {},
+      remainingSeconds: {},
+      timerInterval: null,
+      proctorStream: null,
+      proctorAnalysisTimer: null,
+      proctorOverlayAnim: null,
+      proctorStrikes: 0,
+      proctorMaxStrikes: 4,
+      proctorIntegrityPct: 100,
+      proctorLogs: [],
+      proctorStatus: 'NORMAL',
+      proctorUsingSimulated: false,
+      lastViolationTime: 0,
+      simulatedViolationTimeout: null,
+      user: null,
+      history: [],
+      settings: {
+        timerAlerts: true,
+        autoSubmit: true,
+        soundEffects: true,
+        emailReports: true,
+        highContrast: false
+      }
+    };
+    window.state = state;
+
+    // =========================================================================
     // STUDENT CANDIDATE REPOSITORY & USER STORE (Clean State - No Default Accounts)
     // =========================================================================
     const registeredCandidates = {};
@@ -2408,9 +2457,25 @@
             if (Array.isArray(dbStudents)) {
               for (const k in registeredCandidates) delete registeredCandidates[k];
               dbStudents.forEach(s => {
-                const sKey = (s.username || s.id).toLowerCase();
-                registeredCandidates[sKey] = s;
-                if (s.id) registeredCandidates[s.id.toLowerCase()] = s;
+                const rollIdStr = s.rollId ? String(s.rollId) : (s.username ? String(s.username) : String(s.id || ''));
+                const studentObj = {
+                  username: (s.username || rollIdStr).toLowerCase(),
+                  password: s.password || '',
+                  id: rollIdStr,
+                  name: s.name || s.full_name || 'Student Candidate',
+                  role: 'student',
+                  roleLabel: 'Registered Candidate',
+                  email: s.email || '',
+                  program: s.program || 'Master of Computer Applications (MCA)',
+                  avatar: ((s.name || s.full_name || 'ST').split(' ').map(n => n[0]).join('')).substring(0, 2).toUpperCase()
+                };
+                if (studentObj.username) registeredCandidates[studentObj.username.toLowerCase()] = studentObj;
+                if (studentObj.id) {
+                  registeredCandidates[studentObj.id.toLowerCase()] = studentObj;
+                  registeredCandidates[studentObj.id.toUpperCase()] = studentObj;
+                }
+                if (studentObj.email) registeredCandidates[studentObj.email.toLowerCase()] = studentObj;
+                if (s.id) registeredCandidates[String(s.id).toLowerCase()] = studentObj;
               });
               try {
                 localStorage.setItem('online_exam_registered_students', JSON.stringify(registeredCandidates));
@@ -2427,10 +2492,11 @@
             if (Array.isArray(dbAdmins)) {
               for (const k in registeredAdmins) delete registeredAdmins[k];
               dbAdmins.forEach(a => {
+                const rollIdStr = a.rollId ? String(a.rollId) : (a.username ? String(a.username).toUpperCase() : 'ADMIN');
                 const adminObj = {
-                  username: a.username || (a.rollId ? a.rollId.toLowerCase() : ''),
+                  username: a.username || rollIdStr.toLowerCase(),
                   password: a.password || '',
-                  id: a.rollId || (a.username ? a.username.toUpperCase() : 'ADMIN'),
+                  id: rollIdStr,
                   name: a.name || 'Administrator',
                   role: 'admin',
                   roleLabel: 'Exam Administrator',
@@ -2438,11 +2504,14 @@
                   department: 'Academic Affairs & Examination Board',
                   avatar: ((a.name || 'AD').split(' ').map(n => n[0]).join('')).substring(0, 2).toUpperCase()
                 };
-                if (adminObj.username) registeredAdmins[adminObj.username.toLowerCase()] = adminObj;
-                if (adminObj.id) registeredAdmins[adminObj.id.toLowerCase()] = adminObj;
-                if (adminObj.id) registeredAdmins[adminObj.id.toUpperCase()] = adminObj;
-                if (adminObj.email) registeredAdmins[adminObj.email.toLowerCase()] = adminObj;
-                if (adminObj.name) registeredAdmins[adminObj.name.toLowerCase()] = adminObj;
+                if (adminObj.username) registeredAdmins[String(adminObj.username).toLowerCase()] = adminObj;
+                if (adminObj.id) {
+                  registeredAdmins[String(adminObj.id).toLowerCase()] = adminObj;
+                  registeredAdmins[String(adminObj.id).toUpperCase()] = adminObj;
+                }
+                if (adminObj.email) registeredAdmins[String(adminObj.email).toLowerCase()] = adminObj;
+                if (adminObj.name) registeredAdmins[String(adminObj.name).toLowerCase()] = adminObj;
+                if (a.id) registeredAdmins[String(a.id).toLowerCase()] = adminObj;
               });
               try {
                 localStorage.setItem('online_exam_registered_admins', JSON.stringify(registeredAdmins));
@@ -2576,7 +2645,7 @@
           const lowerK = k.toLowerCase();
           const item = obj[k];
           const itemU = item && (item.username || '').toLowerCase();
-          const itemId = item && (item.id || item.specific_id || item.rollId || '').toLowerCase();
+          const itemId = item && String(item.id || item.specific_id || item.rollId || '').toLowerCase();
           if (demoKeys.includes(lowerK) || demoKeys.includes(itemU) || demoKeys.includes(itemId)) {
             delete obj[k];
           }
@@ -2729,53 +2798,6 @@
         renderAdminDashboard(container);
       }
     }
-
-    // System State with Active Candidate or Administrator Session
-    const state = {
-      isAuthenticated: false, // Default: launches directly on User Authentication Portal
-      authTab: 'signin',
-      forgotStep: 1,
-      verifiedCandidateKey: null,
-      verifiedCandidateName: '',
-      adminForgotStep: 1,
-      verifiedAdminKey: null,
-      verifiedAdminName: '',
-      regRole: 'student', // 'student' or 'admin'
-      adminActiveTab: 'questions',
-      adminSelectedExam: '',
-      adminExamFilter: 'all',
-      questionSearchQuery: '',
-      authRoleSelected: 'student',
-      tempUsername: '',
-      currentView: 'auth',
-      selectedExamId: '',
-      currentQIndex: 0,
-      examAttempts: {},
-      answers: {},
-      remainingSeconds: {},
-      timerInterval: null,
-      proctorStream: null,
-      proctorAnalysisTimer: null,
-      proctorOverlayAnim: null,
-      proctorStrikes: 0,
-      proctorMaxStrikes: 4,
-      proctorIntegrityPct: 100,
-      proctorLogs: [],
-      proctorStatus: 'NORMAL',
-      proctorUsingSimulated: false,
-      lastViolationTime: 0,
-      simulatedViolationTimeout: null,
-      user: null,
-      history: [],
-      settings: {
-        timerAlerts: true,
-        autoSubmit: true,
-        soundEffects: true,
-        emailReports: true,
-        highContrast: false
-      }
-    };
-    window.state = state;
 
     // Ensure state selected IDs point to valid existing exams after loading persisted state
     (function syncInitialSelectedExams() {
@@ -3292,11 +3314,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">USERNAME, ROLL NO. OR EMAIL</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #c084fc; font-size: 15px; pointer-events: none;">👤</span>
-                    <input type="text" id="authUsername" class="auth-input" placeholder="Enter student ID, username or email" required value="" autocomplete="off" readonly onfocus="unlockAuthInput(this)" onclick="handleAuthInputClick(this, 'student', event)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                    
-                    <!-- Floating Saved Details Dropdown for Students -->
-                    <div id="savedDetailsDropdown_student" class="saved-details-panel" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #0b1329; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7); z-index: 100; max-height: 250px; overflow-y: auto;">
-                    </div>
+                    <input type="text" id="authUsername" class="auth-input" placeholder="Enter student ID, username or email" required value="" autocomplete="username" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                   </div>
                 </div>
 
@@ -3304,7 +3322,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">PASSWORD</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
-                    <input type="password" id="authPassword" class="auth-input" placeholder="Enter password" required value="" autocomplete="new-password" readonly onfocus="unlockAuthInput(this)" onclick="unlockAuthInput(this)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="password" id="authPassword" class="auth-input" placeholder="Enter password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                     <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('authPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
                   </div>
                 </div>
@@ -3339,11 +3357,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">ADMINISTRATOR STAFF ID / USERNAME</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8; font-size: 15px; pointer-events: none;">🛡️</span>
-                    <input type="text" id="authAdminUsername" class="auth-input" placeholder="Enter administrator ID or username" required value="" autocomplete="off" readonly onfocus="unlockAuthInput(this)" onclick="handleAuthInputClick(this, 'admin', event)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
-                    
-                    <!-- Floating Saved Details Dropdown for Administrators -->
-                    <div id="savedDetailsDropdown_admin" class="saved-details-panel" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #0b1329; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7); z-index: 100; max-height: 250px; overflow-y: auto;">
-                    </div>
+                    <input type="text" id="authAdminUsername" class="auth-input" placeholder="Enter administrator ID or username" required value="" autocomplete="username" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                   </div>
                 </div>
 
@@ -3351,7 +3365,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">PASSWORD</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
-                    <input type="password" id="authAdminPassword" class="auth-input" placeholder="Enter administrator password" required value="" autocomplete="new-password" readonly onfocus="unlockAuthInput(this)" onclick="unlockAuthInput(this)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="password" id="authAdminPassword" class="auth-input" placeholder="Enter administrator password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                     <button type="button" class="input-toggle-pwd" onclick="togglePasswordVisibility('authAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">👁️</button>
                   </div>
                 </div>
@@ -3658,7 +3672,7 @@
       let matchedName = '';
       for (const [k, a] of Object.entries(registeredAdmins)) {
         if (!a) continue;
-        const aId = (a.id || '').toLowerCase();
+        const aId = String(a.id || '').toLowerCase();
         const aName = (a.username || '').toLowerCase();
         const aEmail = (a.email || '').toLowerCase();
         if ((aId === staffVal || aName === staffVal) && aEmail === emailVal) {
@@ -3736,7 +3750,7 @@
       for (const [k, a] of Object.entries(registeredAdmins)) {
         if (!a) continue;
         if (a === registeredAdmins[key] ||
-            (a.id && a.id.toLowerCase() === key.toLowerCase()) ||
+            (a.id && String(a.id).toLowerCase() === String(key).toLowerCase()) ||
             (a.username && a.username.toLowerCase() === key.toLowerCase())) {
           a.password = pwd1;
         }
@@ -3801,7 +3815,7 @@
       let matchedName = '';
       for (const [k, u] of Object.entries(registeredCandidates)) {
         if (!u) continue;
-        const uId = (u.id || '').toLowerCase();
+        const uId = String(u.id || '').toLowerCase();
         const uName = (u.username || '').toLowerCase();
         const uEmail = (u.email || '').toLowerCase();
         if ((uId === rollVal || uName === rollVal) && uEmail === emailVal) {
@@ -3880,7 +3894,7 @@
       for (const [k, u] of Object.entries(registeredCandidates)) {
         if (!u) continue;
         if (u === registeredCandidates[key] ||
-            (u.id && u.id.toLowerCase() === key.toLowerCase()) ||
+            (u.id && String(u.id).toLowerCase() === String(key).toLowerCase()) ||
             (u.username && u.username.toLowerCase() === key.toLowerCase())) {
           u.password = pwd1;
         }
@@ -3930,7 +3944,8 @@
       const map = new Map();
       for (const u of Object.values(registeredCandidates)) {
         if (!u) continue;
-        const key = (u.id || u.username || '').toLowerCase();
+        const rawKey = u.rollId || u.username || u.id || '';
+        const key = String(rawKey).toLowerCase();
         if (key && !map.has(key)) {
           map.set(key, u);
         }
@@ -3978,7 +3993,7 @@
           const rem = localStorage.getItem('online_exam_saved_admin_login');
           if (rem) {
             const p = JSON.parse(rem);
-            const k = (p.identifier || p.username || p.id || '').toLowerCase();
+            const k = String(p.identifier || p.username || p.id || '').toLowerCase();
             if (k && !seen.has(k)) {
               seen.add(k);
               accounts.push({
@@ -3998,7 +4013,7 @@
         for (const [k, a] of Object.entries(registeredAdmins)) {
           if (!a) continue;
           const ident = a.username || a.id || k;
-          const keyLower = ident.toLowerCase();
+          const keyLower = String(ident).toLowerCase();
           if (!seen.has(keyLower)) {
             seen.add(keyLower);
             accounts.push({
@@ -4018,7 +4033,7 @@
           const rem = localStorage.getItem('online_exam_saved_student_login');
           if (rem) {
             const p = JSON.parse(rem);
-            const k = (p.identifier || p.username || p.id || '').toLowerCase();
+            const k = String(p.identifier || p.username || p.id || '').toLowerCase();
             if (k && !seen.has(k)) {
               seen.add(k);
               accounts.push({
@@ -4038,7 +4053,7 @@
         for (const [k, c] of Object.entries(registeredCandidates)) {
           if (!c) continue;
           const ident = c.username || c.id || k;
-          const keyLower = ident.toLowerCase();
+          const keyLower = String(ident).toLowerCase();
           if (!seen.has(keyLower)) {
             seen.add(keyLower);
             accounts.push({
@@ -4150,7 +4165,7 @@
         const el = document.getElementById(id);
         if (el) {
           el.value = '';
-          el.setAttribute('readonly', 'readonly');
+          el.removeAttribute('readonly');
         }
       });
       closeAllSavedDetailsDropdowns();
@@ -4227,7 +4242,7 @@
       const authenticatedUser = registeredCandidates[usernameInput] ||
         Object.values(registeredCandidates).find(u =>
           (u.username && u.username.toLowerCase() === usernameInput) ||
-          (u.id && u.id.toLowerCase() === usernameInput) ||
+          (u.id && String(u.id).toLowerCase() === usernameInput) ||
           (u.email && u.email.toLowerCase() === usernameInput)
         );
 
@@ -4276,7 +4291,7 @@
       const matchedAdmin = registeredAdmins[usernameInput] ||
         Object.values(registeredAdmins).find(a =>
           (a.username && a.username.toLowerCase() === usernameInput) ||
-          (a.id && a.id.toLowerCase() === usernameInput) ||
+          (a.id && String(a.id).toLowerCase() === usernameInput) ||
           (a.email && a.email.toLowerCase() === usernameInput) ||
           (a.name && a.name.toLowerCase() === usernameInput)
         );
@@ -4508,10 +4523,12 @@
           else if (state.user.role === 'faculty') avatarEl.style.background = 'linear-gradient(135deg, #10b981, #06b6d4)';
           else avatarEl.style.background = 'linear-gradient(135deg, #2563eb, #3b82f6)';
         }
-        if (dropNameEl) dropNameEl.textContent = state.user.name;
-        if (dropRoleEl) dropRoleEl.textContent = `${state.user.roleLabel} • ${state.user ? state.user.id : 'ADMIN'}`;
+        const roleLabel = (state.user && state.user.roleLabel) ? state.user.roleLabel : (state.user && state.user.role === 'admin' ? 'Exam Administrator' : 'Registered Candidate');
+        const roleFirstWord = (roleLabel.split(' ')[0]) || 'Active';
+        if (dropNameEl) dropNameEl.textContent = state.user.name || 'User';
+        if (dropRoleEl) dropRoleEl.textContent = `${roleLabel} • ${state.user ? state.user.id : 'ADMIN'}`;
         if (roleBadgeEl) {
-          roleBadgeEl.textContent = `● Active: ${state.user.roleLabel.split(' ')[0]} (${state.user ? state.user.id : 'ADMIN'})`;
+          roleBadgeEl.textContent = `● Active: ${roleFirstWord} (${state.user ? state.user.id : 'ADMIN'})`;
           roleBadgeEl.style.color = "#10b981";
         }
 
@@ -5537,8 +5554,8 @@
                         </td>
                       </tr>
                     ` : getUniqueRegisteredStudents().map(s => {
-                      const studentKey = (s.id || s.username || '').toLowerCase();
-                      const attempts = (state.history || []).filter(h => (h.studentId && h.studentId.toLowerCase() === studentKey) || (h.userId && h.userId.toLowerCase() === studentKey));
+                      const studentKey = String(s.id || s.username || '').toLowerCase();
+                      const attempts = (state.history || []).filter(h => (h.studentId && String(h.studentId).toLowerCase() === studentKey) || (h.userId && String(h.userId).toLowerCase() === studentKey));
                       const avg = attempts.length > 0 ? `${Math.round(attempts.reduce((a, b) => a + (b.pct || 0), 0) / attempts.length)}%` : 'Pending Exam';
                       return `
                         <tr>

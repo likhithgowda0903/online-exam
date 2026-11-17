@@ -58,7 +58,7 @@ def get_status():
 def get_students():
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT id, username, full_name as name, email, specific_id as rollId, role FROM users WHERE LOWER(role) = 'student'")
+    c.execute("SELECT id, username, password, full_name as name, email, specific_id as rollId, role FROM users WHERE LOWER(role) = 'student'")
     rows = [dict(r) for r in c.fetchall()]
     conn.close()
     return rows
