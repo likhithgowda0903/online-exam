@@ -2407,12 +2407,15 @@
           if (studentsRes.ok) {
             const dbStudents = await studentsRes.json();
             if (Array.isArray(dbStudents)) {
+              for (const k in registeredCandidates) delete registeredCandidates[k];
               dbStudents.forEach(s => {
                 const sKey = (s.username || s.id).toLowerCase();
-                if (!registeredCandidates[sKey]) {
-                  registeredCandidates[sKey] = s;
-                }
+                registeredCandidates[sKey] = s;
+                if (s.id) registeredCandidates[s.id.toLowerCase()] = s;
               });
+              try {
+                localStorage.setItem('online_exam_registered_students', JSON.stringify(registeredCandidates));
+              } catch (e) { }
             }
           }
         } catch (e) { }
@@ -2423,6 +2426,7 @@
           if (adminsRes.ok) {
             const dbAdmins = await adminsRes.json();
             if (Array.isArray(dbAdmins)) {
+              for (const k in registeredAdmins) delete registeredAdmins[k];
               dbAdmins.forEach(a => {
                 const adminObj = {
                   username: a.username || (a.rollId ? a.rollId.toLowerCase() : ''),
@@ -2562,20 +2566,59 @@
 
     // Load custom registered accounts and persisted exams from localStorage if present
     try {
+      const demoKeys = ['alice', 'bob', 'adm101', 'adm202', 'student', 'admin', 'stu1001'];
+      const isDemoAccount = (ident) => {
+        if (!ident) return false;
+        return demoKeys.includes(ident.toString().toLowerCase());
+      };
+      const purgeDemoFromObj = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        for (const k of Object.keys(obj)) {
+          const lowerK = k.toLowerCase();
+          const item = obj[k];
+          const itemU = item && (item.username || '').toLowerCase();
+          const itemId = item && (item.id || item.specific_id || item.rollId || '').toLowerCase();
+          if (demoKeys.includes(lowerK) || demoKeys.includes(itemU) || demoKeys.includes(itemId)) {
+            delete obj[k];
+          }
+        }
+        return obj;
+      };
+
+      // Clean remembered logins or active sessions if currently a demo user
+      ['online_exam_saved_admin_login', 'online_exam_saved_student_login', 'online_exam_active_user', 'online_exam_session_user'].forEach(key => {
+        try {
+          const val = localStorage.getItem(key);
+          if (val) {
+            const p = JSON.parse(val);
+            if (isDemoAccount(p.username) || isDemoAccount(p.id) || isDemoAccount(p.identifier) || isDemoAccount(p.specific_id)) {
+              localStorage.removeItem(key);
+            }
+          }
+        } catch (e) { }
+      });
+
       const savedStudents = localStorage.getItem('online_exam_registered_students');
       if (savedStudents) {
-        const parsed = JSON.parse(savedStudents);
+        const parsed = purgeDemoFromObj(JSON.parse(savedStudents));
         Object.assign(registeredCandidates, parsed);
       }
       const savedAdmins = localStorage.getItem('online_exam_registered_admins');
       if (savedAdmins) {
-        const parsedAdmin = JSON.parse(savedAdmins);
+        const parsedAdmin = purgeDemoFromObj(JSON.parse(savedAdmins));
         Object.assign(registeredAdmins, parsedAdmin);
       }
       try {
         localStorage.setItem('online_exam_registered_students', JSON.stringify(registeredCandidates));
         localStorage.setItem('online_exam_registered_admins', JSON.stringify(registeredAdmins));
       } catch (e) { }
+
+      // Reset state if active session was a demo user
+      if (state.user && (isDemoAccount(state.user.username) || isDemoAccount(state.user.id))) {
+        state.isAuthenticated = false;
+        state.user = null;
+        state.currentView = 'auth';
+      }
 
       // Persist examinations state across browser refreshes
       const savedExams = localStorage.getItem('online_exam_all_exams');
@@ -3419,7 +3462,7 @@
                     <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">ADMINISTRATOR STAFF ID / USERNAME</label>
                     <div class="input-field-wrap" style="position: relative;">
                       <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8; font-size: 15px; pointer-events: none;">🛡️</span>
-                      <input type="text" id="recoverAdminStaffId" class="auth-input" placeholder="e.g. ADM101 or administrator username" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                      <input type="text" id="recoverAdminStaffId" class="auth-input" placeholder="e.g. Staff ID or administrator username" required style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                     </div>
                   </div>
 
