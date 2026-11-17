@@ -1859,6 +1859,17 @@
       background: #0d1b38;
     }
 
+    /* Prevent browser autofill from turning inputs into white boxes */
+    .auth-input:-webkit-autofill,
+    .auth-input:-webkit-autofill:hover, 
+    .auth-input:-webkit-autofill:focus, 
+    .auth-input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #070d1e inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      caret-color: #ffffff !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
     .input-toggle-pwd {
       position: absolute;
       right: 12px;
@@ -3351,10 +3362,18 @@
 
               <form onsubmit="handleLoginSubmit(event)">
                 <div class="form-group" style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">USERNAME, ROLL NO. OR EMAIL</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase;">USERNAME, ROLL NO. OR EMAIL</label>
+                    <button type="button" id="btnStudentSavedDetails" onclick="toggleSavedDetailsDropdown('student', event)" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                      📋 Saved Details ▾
+                    </button>
+                  </div>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #c084fc; font-size: 15px; pointer-events: none;">👤</span>
-                    <input type="text" id="authUsername" class="auth-input" placeholder="Enter student ID, username or email" required value="" autocomplete="username" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="text" id="authUsername" class="auth-input" placeholder="Enter student ID, username or email" required value="" autocomplete="off" readonly onpointerdown="unlockAuthInput(this)" onfocus="unlockAuthInput(this)" onclick="handleAuthInputClick(this, 'student', event)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <!-- Floating Saved Details Dropdown for Students -->
+                    <div id="savedDetailsDropdown_student" class="saved-details-panel" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #0b1329; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7); z-index: 100; max-height: 250px; overflow-y: auto;">
+                    </div>
                   </div>
                 </div>
 
@@ -3362,7 +3381,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">PASSWORD</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
-                    <input type="password" id="authPassword" class="auth-input" placeholder="Enter password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="password" id="authPassword" class="auth-input" placeholder="Enter password" required value="" autocomplete="new-password" readonly onpointerdown="unlockAuthInput(this)" onfocus="unlockAuthInput(this)" onclick="unlockAuthInput(this)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                     <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                   </div>
                 </div>
@@ -3394,10 +3413,18 @@
 
               <form onsubmit="handleAdminLoginSubmit(event)">
                 <div class="form-group" style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">ADMINISTRATOR STAFF ID / USERNAME</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase;">ADMINISTRATOR STAFF ID / USERNAME</label>
+                    <button type="button" id="btnAdminSavedDetails" onclick="toggleSavedDetailsDropdown('admin', event)" style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); color: #c084fc; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                      📋 Saved Details ▾
+                    </button>
+                  </div>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8; font-size: 15px; pointer-events: none;">🛡️</span>
-                    <input type="text" id="authAdminUsername" class="auth-input" placeholder="Enter administrator ID or username" required value="" autocomplete="username" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="text" id="authAdminUsername" class="auth-input" placeholder="Enter administrator ID or username" required value="" autocomplete="off" readonly onpointerdown="unlockAuthInput(this)" onfocus="unlockAuthInput(this)" onclick="handleAuthInputClick(this, 'admin', event)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <!-- Floating Saved Details Dropdown for Administrators -->
+                    <div id="savedDetailsDropdown_admin" class="saved-details-panel" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #0b1329; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7); z-index: 100; max-height: 250px; overflow-y: auto;">
+                    </div>
                   </div>
                 </div>
 
@@ -3405,7 +3432,7 @@
                   <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">PASSWORD</label>
                   <div class="input-field-wrap" style="position: relative;">
                     <span class="input-icon-lead" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 15px; pointer-events: none;">🔒</span>
-                    <input type="password" id="authAdminPassword" class="auth-input" placeholder="Enter administrator password" required value="" autocomplete="current-password" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
+                    <input type="password" id="authAdminPassword" class="auth-input" placeholder="Enter administrator password" required value="" autocomplete="new-password" readonly onpointerdown="unlockAuthInput(this)" onfocus="unlockAuthInput(this)" onclick="unlockAuthInput(this)" style="width: 100%; background: #070d1e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 40px 12px 42px; color: #ffffff; font-size: 14px; outline: none;">
                     <button type="button" class="btn-icon input-toggle-pwd" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authAdminPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px;">👁️</button>
                   </div>
                 </div>
@@ -3418,8 +3445,6 @@
                 </div>
 
                 <button type="submit" class="btn-primary btn-block">
-                  Sign In as Administrator ▶
-                </button>
                   Sign In as Administrator ▶
                 </button>
               </form>
@@ -3676,11 +3701,13 @@
         state.verifiedAdminName = '';
       }
       renderAuthView(document.getElementById('appViewport'));
+      enforceCleanAuthFieldsOnEntry();
     }
 
     function setRegisterRole(role) {
       state.regRole = role;
       renderAuthView(document.getElementById('appViewport'));
+      enforceCleanAuthFieldsOnEntry();
     }
 
     function openAdminForgotPassword(event) {
@@ -3752,6 +3779,7 @@
       state.adminForgotStep = 2;
 
       renderAuthView(document.getElementById('appViewport'));
+      enforceCleanAuthFieldsOnEntry();
       showToastNotification("✓ Administrator account verified! Please set your new password.");
     }
 
@@ -3896,6 +3924,7 @@
 
       // Re-render auth view so Step 2 is cleanly displayed
       renderAuthView(document.getElementById('appViewport'));
+      enforceCleanAuthFieldsOnEntry();
       showToastNotification("✓ Student account verified! Please set your new password.");
     }
 
@@ -4207,7 +4236,7 @@
         const el = document.getElementById(id);
         if (el) {
           el.value = '';
-          el.removeAttribute('readonly');
+          el.setAttribute('readonly', 'readonly');
         }
       });
       closeAllSavedDetailsDropdowns();
