@@ -2054,7 +2054,7 @@
           <div class="user-profile-widget" onclick="toggleProfileDropdown(event)" title="Account Menu">
             <div class="user-avatar" id="navUserAvatar">🔐</div>
             <div class="user-meta">
-              <span class="user-name" id="navUserName">Candidate (Guest)</span>
+              <span class="user-name" id="navUserName">Sign In</span>
               <span class="user-id" id="navUserId" style="display: none;"></span>
             </div>
             <span style="font-size: var(--fs-xs); color: var(--text-dim); margin-left: 4px;">▼</span>
@@ -2065,8 +2065,7 @@
             style="display: none; position: absolute; right: 0; top: 52px; width: 230px; background: var(--bg-card); border: 1px solid var(--border-highlight); border-radius: var(--radius-md); box-shadow: 0 15px 35px rgba(0,0,0,0.55); z-index: 100; overflow: hidden;">
             <div
               style="padding: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-card-subtle);">
-              <div style="font-weight: 700; color: #fff; font-size: var(--fs-base);" id="dropdownUserName">Guest
-                Candidate</div>
+              <div style="font-weight: 700; color: #fff; font-size: var(--fs-base);" id="dropdownUserName">Not Signed In</div>
               <div style="font-size: var(--fs-xs); color: #60a5fa; margin-top: 2px;" id="dropdownUserRole">
                 Authentication Required</div>
             </div>
@@ -3018,7 +3017,7 @@
         if (quoteIllu) quoteIllu.textContent = "📚💻";
         if (quoteText) quoteText.textContent = '"Your future is built by what you do today."';
         if (roleBadge) {
-          roleBadge.innerHTML = `<span style="color:#10b981; font-size: var(--fs-sm); font-weight: 700;">● Candidate Active (${state.user ? state.user.id : 'Guest'})</span>`;
+          roleBadge.innerHTML = `<span style="color:#10b981; font-size: var(--fs-sm); font-weight: 700;">● Candidate Active (${state.user ? (state.user.id || state.user.name) : 'Student'})</span>`;
         }
 
         const studentNavItems = [
@@ -3077,6 +3076,9 @@
       // Update sidebar dynamically based on active view & role
       if (typeof renderSidebarNavigation === 'function') {
         renderSidebarNavigation();
+      }
+      if (typeof updateNavbarUserInfo === 'function') {
+        updateNavbarUserInfo();
       }
 
       document.querySelectorAll('.nav-list .nav-item').forEach(el => el.classList.remove('active'));
@@ -4466,15 +4468,18 @@
       const topTitleEl = document.getElementById('topPageTitle');
       const roleBadgeEl = document.getElementById('sidebarRoleBadge');
 
-      if (!state.isAuthenticated) {
-        if (nameEl) nameEl.textContent = "Candidate (Guest)";
-        if (idEl) idEl.textContent = "";
-        if (avatarEl) {
-          avatarEl.textContent = "👤";
-          avatarEl.style.background = "#2563eb";
+      if (!state.isAuthenticated || !state.user) {
+        if (nameEl) nameEl.textContent = "Sign In";
+        if (idEl) {
+          idEl.textContent = "";
+          idEl.style.display = "none";
         }
-        if (dropNameEl) dropNameEl.textContent = "Candidate (Guest)";
-        if (dropRoleEl) dropRoleEl.textContent = "Sign In Required";
+        if (avatarEl) {
+          avatarEl.textContent = "🔐";
+          avatarEl.style.background = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
+        }
+        if (dropNameEl) dropNameEl.textContent = "Not Signed In";
+        if (dropRoleEl) dropRoleEl.textContent = "Authentication Required";
         if (roleBadgeEl) {
           roleBadgeEl.innerHTML = '<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span><span>System Online</span>';
           roleBadgeEl.style.color = "#10b981";
@@ -4493,7 +4498,10 @@
           ? state.user.role.charAt(0).toUpperCase() + state.user.role.slice(1).toLowerCase()
           : 'Student';
         if (nameEl) nameEl.textContent = state.user.name;
-        if (idEl) idEl.textContent = `${state.user ? state.user.id : 'Admin'} (${roleName})`;
+        if (idEl) {
+          idEl.textContent = `${state.user ? state.user.id : 'Admin'} (${roleName})`;
+          idEl.style.display = "";
+        }
         if (avatarEl) {
           avatarEl.textContent = state.user.avatar || state.user.name.substring(0, 2).toUpperCase();
           if (state.user.role === 'admin') avatarEl.style.background = 'linear-gradient(135deg, #8b5cf6, #ec4899)';
