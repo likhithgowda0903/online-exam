@@ -2417,14 +2417,288 @@
       }
 ];
 
+    const defaultDataScienceQuestions = [
+      {
+        "id": 1,
+        "text": "1. What is the main goal of data science?",
+        "options": [
+          "To design hardware",
+          "To extract useful insights from data",
+          "To create operating systems",
+          "To replace databases"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "Data science combines statistics, computing and domain knowledge to learn from data."
+      },
+      {
+        "id": 2,
+        "text": "2. Which programming language is widely used in data science?",
+        "options": [
+          "Python",
+          "HTML",
+          "CSS",
+          "XML"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "Python has widely used libraries for analysis, visualization and machine learning."
+      },
+      {
+        "id": 3,
+        "text": "3. What does CSV stand for?",
+        "options": [
+          "Computer Stored Values",
+          "Common System Variables",
+          "Comma-Separated Values",
+          "Column Storage Version"
+        ],
+        "correct": 2,
+        "marks": 5,
+        "explanation": "CSV stores tabular data as values separated by commas."
+      },
+      {
+        "id": 4,
+        "text": "4. Which Python library is commonly used for data frames?",
+        "options": [
+          "Pygame",
+          "Pandas",
+          "Tkinter",
+          "Turtle"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "Pandas provides Series and DataFrame structures for data manipulation."
+      },
+      {
+        "id": 5,
+        "text": "5. What is a dataset?",
+        "options": [
+          "A collection of related data",
+          "A programming language",
+          "A network device",
+          "A processor"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "A dataset is an organized collection of data used for analysis."
+      },
+      {
+        "id": 6,
+        "text": "6. Which measure is the arithmetic average?",
+        "options": [
+          "Mode",
+          "Median",
+          "Mean",
+          "Range"
+        ],
+        "correct": 2,
+        "marks": 5,
+        "explanation": "The mean is the sum of values divided by the number of values."
+      },
+      {
+        "id": 7,
+        "text": "7. What is the median?",
+        "options": [
+          "Most frequent value",
+          "Middle value in ordered data",
+          "Maximum minus minimum",
+          "Sum of values"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "The median is the middle value after sorting; with an even count, average the two middle values."
+      },
+      {
+        "id": 8,
+        "text": "8. Which measure identifies the most frequent value?",
+        "options": [
+          "Mean",
+          "Variance",
+          "Standard deviation",
+          "Mode"
+        ],
+        "correct": 3,
+        "marks": 5,
+        "explanation": "The mode is the value that appears most often."
+      },
+      {
+        "id": 9,
+        "text": "9. What is data cleaning?",
+        "options": [
+          "Correcting inaccurate, incomplete or duplicate data",
+          "Encrypting every value",
+          "Drawing charts only",
+          "Increasing file size"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "Cleaning improves data quality by addressing errors, missing values and duplicates."
+      },
+      {
+        "id": 10,
+        "text": "10. Which chart is useful for comparing categories?",
+        "options": [
+          "Scatter plot",
+          "Bar chart",
+          "Line chart only",
+          "Heat map only"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "Bar charts make comparisons across discrete categories easy."
+      },
+      {
+        "id": 11,
+        "text": "11. What does a histogram show?",
+        "options": [
+          "Text relationships",
+          "Distribution of numerical data in bins",
+          "Algorithm steps",
+          "Geographic boundaries"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "A histogram groups numerical observations into intervals and displays their frequencies."
+      },
+      {
+        "id": 12,
+        "text": "12. What is an outlier?",
+        "options": [
+          "A value unusually far from most observations",
+          "The most common value",
+          "A missing column name",
+          "A data type"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "An outlier differs substantially from the general pattern in a dataset."
+      },
+      {
+        "id": 13,
+        "text": "13. In machine learning, what is a feature?",
+        "options": [
+          "Report title",
+          "Input variable used by a model",
+          "Error message",
+          "Database password"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "Features are input variables used by a model to make predictions."
+      },
+      {
+        "id": 14,
+        "text": "14. What is the purpose of a training dataset?",
+        "options": [
+          "Evaluate final performance only",
+          "Teach a model patterns from examples",
+          "Store passwords",
+          "Display charts"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "A learning algorithm uses training data to fit the model."
+      },
+      {
+        "id": 15,
+        "text": "15. Why is a test dataset used?",
+        "options": [
+          "Train the model repeatedly",
+          "Increase features",
+          "Estimate performance on unseen data",
+          "Replace missing values"
+        ],
+        "correct": 2,
+        "marks": 5,
+        "explanation": "Test data evaluates how well a trained model generalizes to unseen examples."
+      },
+      {
+        "id": 16,
+        "text": "16. Which is an example of classification?",
+        "options": [
+          "Predicting temperature as a number",
+          "Grouping customers without labels",
+          "Predicting spam or not spam",
+          "Calculating average age"
+        ],
+        "correct": 2,
+        "marks": 5,
+        "explanation": "Classification predicts a category or class label."
+      },
+      {
+        "id": 17,
+        "text": "17. Which is an example of regression?",
+        "options": [
+          "Predicting a house price",
+          "Detecting a cat in an image",
+          "Sorting spam categories",
+          "Recognizing digit labels"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "Regression predicts a continuous numerical value, such as a price."
+      },
+      {
+        "id": 18,
+        "text": "18. What is overfitting?",
+        "options": [
+          "Model fits training data well but performs poorly on new data",
+          "Model has no features",
+          "Dataset has no numbers",
+          "Chart has too many labels"
+        ],
+        "correct": 0,
+        "marks": 5,
+        "explanation": "Overfitting occurs when a model learns noise or details specific to training data."
+      },
+      {
+        "id": 19,
+        "text": "19. What does correlation measure?",
+        "options": [
+          "Cause of an event",
+          "Strength and direction of association between variables",
+          "Number of table rows",
+          "Accuracy of every model"
+        ],
+        "correct": 1,
+        "marks": 5,
+        "explanation": "Correlation describes association; it does not by itself prove causation."
+      },
+      {
+        "id": 20,
+        "text": "20. What usually comes first in a data science project?",
+        "options": [
+          "Deploy the model",
+          "Delete raw data",
+          "Understand the problem and define objectives",
+          "Publish the final chart"
+        ],
+        "correct": 2,
+        "marks": 5,
+        "explanation": "A project starts by understanding the problem, stakeholders and goals."
+      }
+    ];
+
     const masterQuestionPools = {
-      'OOP': defaultOOPQuestions
+      'OOP': defaultOOPQuestions,
+      'DS': defaultDataScienceQuestions
     };
     const allExams = {
       'OOP': {
         id: 'OOP',
         title: 'Object-Oriented Programming (OOPs)',
         category: 'C++ Programming',
+        totalQuestions: 20,
+        durationMinutes: 15,
+        passingPercentage: 60,
+        totalMarks: 100,
+        questions: []
+      },
+      'DS': {
+        id: 'DS',
+        title: 'Data Science',
+        category: 'Data Science',
         totalQuestions: 20,
         durationMinutes: 15,
         passingPercentage: 60,
@@ -2762,8 +3036,8 @@
         deletedExamIds = JSON.parse(localStorage.getItem('online_exam_deleted_exam_ids') || '[]');
       } catch (e) { }
       if (Array.isArray(deletedExamIds)) {
-        // Guarantee OOP is never pruned by legacy deleted list
-        deletedExamIds = deletedExamIds.filter(id => id !== 'OOP');
+        // Guarantee OOP and DS are never pruned by legacy deleted list
+        deletedExamIds = deletedExamIds.filter(id => id !== 'OOP' && id !== 'DS');
         try { localStorage.setItem('online_exam_deleted_exam_ids', JSON.stringify(deletedExamIds)); } catch (e) { }
         deletedExamIds.forEach(id => {
           if (allExams[id] && !allExams[id].created_by && !allExams[id].admin_id) {
@@ -2795,6 +3069,23 @@
       }
       if (!masterQuestionPools['OOP'] || masterQuestionPools['OOP'].length === 0) {
         masterQuestionPools['OOP'] = [...defaultOOPQuestions];
+      }
+
+      // Guarantee the Data Science exam and its 20 questions are always populated
+      if (!allExams['DS']) {
+        allExams['DS'] = {
+          id: 'DS',
+          title: 'Data Science',
+          category: 'Data Science',
+          totalQuestions: 20,
+          durationMinutes: 15,
+          passingPercentage: 60,
+          totalMarks: 100,
+          questions: []
+        };
+      }
+      if (!masterQuestionPools['DS'] || masterQuestionPools['DS'].length === 0) {
+        masterQuestionPools['DS'] = [...defaultDataScienceQuestions];
       }
       saveExamsToStorage();
       saveQuestionPoolsToStorage();
